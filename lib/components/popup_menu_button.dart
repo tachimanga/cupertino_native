@@ -14,9 +14,14 @@ abstract class CNPopupMenuEntry {
 }
 
 /// A selectable item in a popup menu.
-class CNPopupMenuItem extends CNPopupMenuEntry {
+class CNPopupMenuItem<T> extends CNPopupMenuEntry {
   /// Creates a selectable popup menu item.
-  const CNPopupMenuItem({required this.label, this.icon, this.enabled = true});
+  const CNPopupMenuItem({
+    required this.label,
+    this.icon,
+    this.enabled = true,
+    this.value,
+  });
 
   /// Display label for the item.
   final String label;
@@ -26,6 +31,9 @@ class CNPopupMenuItem extends CNPopupMenuEntry {
 
   /// Whether the item can be selected.
   final bool enabled;
+
+  /// Optional value of type T associated with this item.
+  final T? value;
 }
 
 /// A visual divider between popup menu items.
@@ -39,7 +47,7 @@ class CNPopupMenuDivider extends CNPopupMenuEntry {
 /// A Cupertino-native popup menu button.
 ///
 /// On iOS/macOS this embeds a native popup button and shows a native menu.
-class CNPopupMenuButton extends StatefulWidget {
+class CNPopupMenuButton<T> extends StatefulWidget {
   /// Creates a text-labeled popup menu button.
   const CNPopupMenuButton({
     super.key,
@@ -84,7 +92,7 @@ class CNPopupMenuButton extends StatefulWidget {
   final List<CNPopupMenuEntry> items;
 
   /// Called with the selected index when the user makes a selection.
-  final ValueChanged<int> onSelected;
+  final void Function(int index, CNPopupMenuItem<T> entry) onSelected;
 
   /// Tint color for the control.
   final Color? tint;
@@ -102,10 +110,10 @@ class CNPopupMenuButton extends StatefulWidget {
   bool get isIconButton => buttonIcon != null;
 
   @override
-  State<CNPopupMenuButton> createState() => _CNPopupMenuButtonState();
+  State<CNPopupMenuButton<T>> createState() => _CNPopupMenuButtonState<T>();
 }
 
-class _CNPopupMenuButtonState extends State<CNPopupMenuButton> {
+class _CNPopupMenuButtonState<T> extends State<CNPopupMenuButton<T>> {
   MethodChannel? _channel;
   bool? _lastIsDark;
   int? _lastTint;
@@ -123,7 +131,7 @@ class _CNPopupMenuButtonState extends State<CNPopupMenuButton> {
       widget.tint ?? CupertinoTheme.of(context).primaryColor;
 
   @override
-  void didUpdateWidget(covariant CNPopupMenuButton oldWidget) {
+  void didUpdateWidget(covariant CNPopupMenuButton<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     _syncPropsToNativeIfNeeded();
   }
@@ -164,11 +172,11 @@ class _CNPopupMenuButtonState extends State<CNPopupMenuButton> {
                       : null,
                   actions: [
                     for (var i = 0; i < widget.items.length; i++)
-                      if (widget.items[i] is CNPopupMenuItem)
+                      if (widget.items[i] is CNPopupMenuItem<T>)
                         CupertinoActionSheetAction(
                           onPressed: () => Navigator.of(ctx).pop(i),
                           child: Text(
-                            (widget.items[i] as CNPopupMenuItem).label,
+                            (widget.items[i] as CNPopupMenuItem<T>).label,
                           ),
                         )
                       else
@@ -182,7 +190,12 @@ class _CNPopupMenuButtonState extends State<CNPopupMenuButton> {
                 );
               },
             );
-            if (selected != null) widget.onSelected(selected);
+            if (selected != null) {
+              final selectedEntry = widget.items[selected];
+              if (selectedEntry is CNPopupMenuItem<T>) {
+                widget.onSelected(selected, selectedEntry);
+              }
+            }
           },
           child: widget.isIconButton
               ? Icon(CupertinoIcons.ellipsis, size: widget.buttonIcon?.size)
@@ -214,7 +227,7 @@ class _CNPopupMenuButtonState extends State<CNPopupMenuButton> {
         modes.add(null);
         palettes.add(null);
         gradients.add(null);
-      } else if (e is CNPopupMenuItem) {
+      } else if (e is CNPopupMenuItem<T>) {
         labels.add(e.label);
         symbols.add(e.icon?.name ?? '');
         isDivider.add(false);
@@ -348,7 +361,28 @@ class _CNPopupMenuButtonState extends State<CNPopupMenuButton> {
     if (call.method == 'itemSelected') {
       final args = call.arguments as Map?;
       final idx = (args?['index'] as num?)?.toInt();
-      if (idx != null) widget.onSelected(idx);
+
+      if (idx != null) {
+        // Native taraf divider'ları atlayıp sadece seçilebilir itemları indexliyor
+        // Bu yüzden sadece CNPopupMenuItem'ları toplayıp doğru index mapping yapıyoruz
+        final selectableItems = <CNPopupMenuEntry>[];
+        final originalIndices = <int>[];
+
+        for (int i = 0; i < widget.items.length; i++) {
+          if (widget.items[i] is CNPopupMenuItem<T>) {
+            selectableItems.add(widget.items[i]);
+            originalIndices.add(i);
+          }
+        }
+
+        if (idx >= 0 && idx < selectableItems.length) {
+          final originalIndex = originalIndices[idx];
+          final selectedEntry = widget.items[originalIndex];
+          if (selectedEntry is CNPopupMenuItem<T>) {
+            widget.onSelected(originalIndex, selectedEntry);
+          }
+        }
+      }
     }
     return null;
   }
@@ -389,7 +423,7 @@ class _CNPopupMenuButtonState extends State<CNPopupMenuButton> {
         updModes.add(null);
         updPalettes.add(null);
         updGradients.add(null);
-      } else if (e is CNPopupMenuItem) {
+      } else if (e is CNPopupMenuItem<T>) {
         updLabels.add(e.label);
         updSymbols.add(e.icon?.name ?? '');
         updIsDivider.add(false);

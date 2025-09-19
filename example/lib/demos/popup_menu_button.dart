@@ -11,23 +11,24 @@ class PopupMenuButtonDemoPage extends StatefulWidget {
 
 class _PopupMenuButtonDemoPageState extends State<PopupMenuButtonDemoPage> {
   int? _lastSelected;
+  String? _lastSelectedLabel;
 
   @override
   Widget build(BuildContext context) {
     final items = [
-      CNPopupMenuItem(label: 'New File', icon: const CNSymbol('doc', size: 18)),
-      CNPopupMenuItem(
+      const CNPopupMenuItem(label: 'New File', icon: CNSymbol('doc', size: 18)),
+      const CNPopupMenuItem(
         label: 'New Folder',
-        icon: const CNSymbol('folder', size: 18),
+        icon: CNSymbol('folder', size: 18),
       ),
       const CNPopupMenuDivider(),
-      CNPopupMenuItem(
+      const CNPopupMenuItem(
         label: 'Rename',
-        icon: const CNSymbol('rectangle.and.pencil.and.ellipsis', size: 18),
+        icon: CNSymbol('rectangle.and.pencil.and.ellipsis', size: 18),
       ),
-      CNPopupMenuItem(
+      const CNPopupMenuItem(
         label: 'Delete',
-        icon: const CNSymbol('trash', size: 18),
+        icon: CNSymbol('trash', size: 18),
         enabled: false,
       ),
     ];
@@ -48,8 +49,11 @@ class _PopupMenuButtonDemoPageState extends State<PopupMenuButtonDemoPage> {
                 CNPopupMenuButton(
                   buttonLabel: 'Actions',
                   items: items,
-                  onSelected: (index) {
-                    setState(() => _lastSelected = index);
+                  onSelected: (index, entry) {
+                    setState(() {
+                      _lastSelected = index;
+                      _lastSelectedLabel = entry.label;
+                    });
                   },
                   buttonStyle: CNButtonStyle.plain,
                 ),
@@ -65,16 +69,22 @@ class _PopupMenuButtonDemoPageState extends State<PopupMenuButtonDemoPage> {
                   buttonIcon: const CNSymbol('ellipsis', size: 18),
                   size: 44,
                   items: items,
-                  onSelected: (index) {
-                    setState(() => _lastSelected = index);
+                  onSelected: (index, entry) {
+                    setState(() {
+                      _lastSelected = index;
+                      _lastSelectedLabel = entry.label;
+                    });
                   },
                   buttonStyle: CNButtonStyle.glass,
                 ),
               ],
             ),
             const SizedBox(height: 24),
-            if (_lastSelected != null)
+            if (_lastSelected != null) ...[
               Center(child: Text('Selected index: $_lastSelected')),
+              const SizedBox(height: 8),
+              Center(child: Text('Selected label: $_lastSelectedLabel')),
+            ],
           ],
         ),
       ),
