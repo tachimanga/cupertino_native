@@ -134,6 +134,40 @@ class _ButtonDemoPageState extends State<ButtonDemoPage> {
               ],
             ),
             const SizedBox(height: 48),
+            const Text('Child widget buttons'),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                CNButton.child(
+                  child: const Text('Custom Child'),
+                  style: CNButtonStyle.borderedProminent,
+                  onPressed: () => _set('Child Button'),
+                  shrinkWrap: true,
+                ),
+                CNButton.child(
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(CupertinoIcons.heart_fill, size: 16),
+                      SizedBox(width: 8),
+                      Text('With Icon'),
+                    ],
+                  ),
+                  style: CNButtonStyle.filled,
+                  onPressed: () => _set('Child with Icon'),
+                  shrinkWrap: true,
+                ),
+                CNButton.child(
+                  child: const Text('Disabled'),
+                  style: CNButtonStyle.tinted,
+                  onPressed: null,
+                  shrinkWrap: true,
+                ),
+              ],
+            ),
+            const SizedBox(height: 48),
             Center(child: Text('Last pressed: $_last')),
           ],
         ),

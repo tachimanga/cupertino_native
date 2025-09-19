@@ -23,6 +23,7 @@ class CNButton extends StatefulWidget {
     this.shrinkWrap = false,
     this.style = CNButtonStyle.plain,
   }) : icon = null,
+       child = null,
        width = null,
        round = false;
 
@@ -36,16 +37,34 @@ class CNButton extends StatefulWidget {
     double size = 44.0,
     this.style = CNButtonStyle.glass,
   }) : label = null,
+       child = null,
        round = true,
        width = size,
        height = size,
        shrinkWrap = false,
        super();
 
+  /// Creates a child widget variant of [CNButton].
+  const CNButton.child({
+    super.key,
+    required this.child,
+    this.onPressed,
+    this.enabled = true,
+    this.tint,
+    this.height = 32.0,
+    this.shrinkWrap = false,
+    this.style = CNButtonStyle.plain,
+  }) : label = null,
+       icon = null,
+       width = null,
+       round = false;
+
   /// Button text (null in icon mode).
   final String? label; // null in icon mode
   /// Button icon (non-null in icon mode).
   final CNSymbol? icon; // non-null in icon mode
+  /// Button child widget (non-null in child mode).
+  final Widget? child; // non-null in child mode
   /// Callback when pressed.
   final VoidCallback? onPressed;
 
@@ -71,6 +90,9 @@ class CNButton extends StatefulWidget {
 
   /// Whether this instance is configured as the icon variant.
   bool get isIcon => icon != null;
+
+  /// Whether this instance is configured as the child variant.
+  bool get isChild => child != null;
 
   @override
   State<CNButton> createState() => _CNButtonState();
@@ -131,6 +153,8 @@ class _CNButtonState extends State<CNButton> {
               : null,
           child: widget.isIcon
               ? Icon(CupertinoIcons.ellipsis, size: widget.icon?.size)
+              : widget.isChild
+              ? widget.child!
               : Text(widget.label ?? ''),
         ),
       );
@@ -140,6 +164,7 @@ class _CNButtonState extends State<CNButton> {
 
     final creationParams = <String, dynamic>{
       if (widget.label != null) 'buttonTitle': widget.label,
+      if (widget.child != null) 'buttonTitle': '', // Empty title for child mode
       if (widget.icon != null) 'buttonIconName': widget.icon!.name,
       if (widget.icon?.size != null) 'buttonIconSize': widget.icon!.size,
       if (widget.icon?.color != null)
@@ -187,7 +212,7 @@ class _CNButtonState extends State<CNButton> {
         double? width;
         if (widget.isIcon) {
           width = widget.width ?? widget.height;
-        } else if (preferIntrinsic) {
+        } else if (preferIntrinsic && !widget.isChild) {
           width = _intrinsicWidth ?? 80.0;
         }
         return Listener(
@@ -215,7 +240,14 @@ class _CNButtonState extends State<CNButton> {
           child: SizedBox(
             height: widget.height,
             width: width,
-            child: platformView,
+            child: widget.isChild
+                ? Stack(
+                    children: [
+                      Positioned.fill(child: platformView),
+                      Center(child: widget.child!),
+                    ],
+                  )
+                : platformView,
           ),
         );
       },
@@ -233,7 +265,7 @@ class _CNButtonState extends State<CNButton> {
     _lastIconSize = widget.icon?.size;
     _lastIconColor = resolveColorToArgb(widget.icon?.color, context);
     _lastStyle = widget.style;
-    if (!widget.isIcon) {
+    if (!widget.isIcon && !widget.isChild) {
       _requestIntrinsicSize();
     }
   }
@@ -281,7 +313,7 @@ class _CNButtonState extends State<CNButton> {
     await ch.invokeMethod('setEnabled', {
       'enabled': (widget.enabled && widget.onPressed != null),
     });
-    if (_lastTitle != widget.label && widget.label != null) {
+    if (_lastTitle != widget.label && widget.label != null && !widget.isChild) {
       await ch.invokeMethod('setButtonTitle', {'title': widget.label});
       _lastTitle = widget.label;
       _requestIntrinsicSize();
