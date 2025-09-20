@@ -153,6 +153,41 @@ CNTabBar(
 )
 ```
 
+### Alert Dialog
+
+![Liquid Glass Alert Dialog](https://github.com/serverpod/cupertino_native/raw/main/misc/screenshots/alert-dialog.png)
+
+```dart
+CNAlertDialog.show(
+  context: context,
+  title: 'Delete Item',
+  message: 'Are you sure you want to delete this item? This action cannot be undone.',
+  actions: [
+    CNAlertAction(
+      title: 'Cancel',
+      style: CNAlertActionStyle.cancel,
+      onPressed: () => Navigator.pop(context),
+    ),
+    CNAlertAction(
+      title: 'Delete',
+      style: CNAlertActionStyle.destructive,
+      onPressed: () {
+        // Handle deletion
+        Navigator.pop(context);
+      },
+    ),
+  ],
+  icon: const CNSymbol('trash.fill', size: 24, color: Colors.red),
+  style: CNButtonStyle.glass,
+);
+
+// Multiple action styles supported:
+// - defaultAction, cancel, destructive
+// - primary, secondary, success, warning, info, disabled
+// - Automatic dark mode adaptation
+// - SF Symbol icon support with multiple rendering modes
+```
+
 ## What's left to do?
 So far, this is more of a proof of concept than a full package (although the included components do work). Future improvements include:
 
@@ -163,5 +198,5 @@ So far, this is more of a proof of concept than a full package (although the inc
 - Investigate how to best combine scroll views with the native components.
 - macOS compiles and runs, but it's untested with Liquid Glass and generally doesn't look great.
 
-## How was this done?
+## How was this done?z
 Pretty much vibe-coded with Codex and GPT-5. 😅
