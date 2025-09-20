@@ -7,6 +7,7 @@ import 'demos/tab_bar.dart';
 import 'demos/icon.dart';
 import 'demos/popup_menu_button.dart';
 import 'demos/button.dart';
+import 'demos/alert_dialog.dart';
 
 void main() {
   runApp(const MyApp());
@@ -104,7 +105,7 @@ class HomePage extends StatelessWidget {
                     icon: CNSymbol('circle.fill', size: 18, color: entry.value),
                   ),
               ],
-              onSelected: (index) {
+              onSelected: (index, entry) {
                 if (index >= 0 && index < _systemColors.length) {
                   onSelectAccentColor(_systemColors[index].value);
                 }
@@ -195,6 +196,23 @@ class HomePage extends StatelessWidget {
                 onTap: () {
                   Navigator.of(context).push(
                     CupertinoPageRoute(builder: (_) => const ButtonDemoPage()),
+                  );
+                },
+              ),
+              CupertinoListTile(
+                title: Text('Alert Dialog'),
+                leading: CNIcon(
+                  symbol: CNSymbol(
+                    'exclamationmark.triangle',
+                    color: accentColor,
+                  ),
+                ),
+                trailing: CupertinoListTileChevron(),
+                onTap: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute(
+                      builder: (_) => const AlertDialogDemoPage(),
+                    ),
                   );
                 },
               ),
