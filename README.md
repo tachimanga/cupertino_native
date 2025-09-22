@@ -136,7 +136,7 @@ final items = [
 CNPopupMenuButton(
   buttonLabel: 'Actions',
   items: items,
-  onSelected: (index) {
+  onSelected: (int index, CNPopupMenuItem<T> entry) {
     // Handle selection
   },
 )
