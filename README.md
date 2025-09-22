@@ -164,8 +164,8 @@ CNTabBar(
 ### Alert Dialog
 
 | Alert Dialog | With icon |
-|-----------|---------|
-| ![Liquid Glass Alert Dialog](https://github.com/berkaycatak/cupertino_native/raw/main/misc/screenshots/alert-dialog.png) | ![Liquid Glass Alert Dialog With Icon](https://github.com/berkaycatak/cupertino_native/raw/main/misc/screenshots/alert-dialog-with-icon.png) |
+|-----------|---------|       
+| ![Liquid Glass Alert Dialog](https://raw.githubusercontent.com/berkaycatak/cupertino_native/refs/heads/main/misc/screenshots/alert-dialog.png) | ![Liquid Glass Alert Dialog With Icon](https://github.com/berkaycatak/cupertino_native/raw/main/misc/screenshots/alert-dialog-with-icon.png) |
 
 
 ```dart
