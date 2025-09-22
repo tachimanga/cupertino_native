@@ -61,9 +61,9 @@ class CNAlertAction {
   final bool enabled;
 }
 
-/// A Cupertino-native alert dialog with iOS 26 liquid glass design.
+/// A Cupertino-native alert dialog with bordered prominent styling.
 ///
-/// On iOS/macOS this uses native UIAlertController/NSAlert with liquid glass styling.
+/// On iOS/macOS this uses native UIAlertController/NSAlert with bordered prominent styling.
 /// Falls back to CupertinoAlertDialog on other platforms.
 class CNAlertDialog extends StatefulWidget {
   /// Creates an alert dialog.
@@ -73,7 +73,6 @@ class CNAlertDialog extends StatefulWidget {
     this.message,
     required this.actions,
     this.icon,
-    this.style = CNButtonStyle.glass,
   });
 
   /// The title of the alert dialog.
@@ -88,9 +87,6 @@ class CNAlertDialog extends StatefulWidget {
   /// Optional icon to display in the alert.
   final CNSymbol? icon;
 
-  /// Visual style for the alert (glass effects).
-  final CNButtonStyle style;
-
   /// Shows the alert dialog as a modal.
   static Future<void> show({
     required BuildContext context,
@@ -98,7 +94,6 @@ class CNAlertDialog extends StatefulWidget {
     String? message,
     required List<CNAlertAction> actions,
     CNSymbol? icon,
-    CNButtonStyle style = CNButtonStyle.glass,
   }) {
     return showCupertinoDialog<void>(
       context: context,
@@ -107,7 +102,6 @@ class CNAlertDialog extends StatefulWidget {
         message: message,
         actions: actions,
         icon: icon,
-        style: style,
       ),
     );
   }
@@ -172,7 +166,7 @@ class _CNAlertDialogState extends State<CNAlertDialog> {
       if (widget.icon?.size != null) 'iconSize': widget.icon!.size,
       if (widget.icon?.color != null)
         'iconColor': resolveColorToArgb(widget.icon!.color, context),
-      'alertStyle': widget.style.name,
+      'alertStyle': CNButtonStyle.borderedProminent.name,
       'isDark': _isDark,
       'style': encodeStyle(context, tint: _effectiveTint),
       if (widget.icon?.mode != null)

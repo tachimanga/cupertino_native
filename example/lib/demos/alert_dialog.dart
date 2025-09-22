@@ -26,7 +26,6 @@ class _AlertDialogDemoPageState extends State<AlertDialogDemoPage> {
           },
         ),
       ],
-      style: CNButtonStyle.glass,
     );
   }
 
@@ -53,7 +52,6 @@ class _AlertDialogDemoPageState extends State<AlertDialogDemoPage> {
         ),
       ],
       icon: const CNSymbol('trash', size: 24, color: CupertinoColors.systemRed),
-      style: CNButtonStyle.prominentGlass,
     );
   }
 
@@ -84,7 +82,6 @@ class _AlertDialogDemoPageState extends State<AlertDialogDemoPage> {
         ),
       ],
       icon: const CNSymbol('doc.fill', size: 24),
-      style: CNButtonStyle.glass,
     );
   }
 
@@ -117,7 +114,6 @@ class _AlertDialogDemoPageState extends State<AlertDialogDemoPage> {
         size: 24,
         color: CupertinoColors.systemOrange,
       ),
-      style: CNButtonStyle.bordered,
     );
   }
 
@@ -140,7 +136,6 @@ class _AlertDialogDemoPageState extends State<AlertDialogDemoPage> {
         size: 24,
         color: CupertinoColors.systemGreen,
       ),
-      style: CNButtonStyle.bordered,
     );
   }
 
@@ -198,7 +193,6 @@ class _AlertDialogDemoPageState extends State<AlertDialogDemoPage> {
         size: 24,
         color: CupertinoColors.systemBlue,
       ),
-      style: CNButtonStyle.bordered,
     );
   }
 

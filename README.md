@@ -178,12 +178,12 @@ CNAlertDialog.show(
     ),
   ],
   icon: const CNSymbol('trash.fill', size: 24, color: Colors.red),
-  style: CNButtonStyle.glass,
 );
 
 // Multiple action styles supported:
-// - defaultAction, cancel, destructive
+// - defaultAction, cancel, destructive  
 // - primary, secondary, success, warning, info, disabled
+// - Uses borderedProminent style by default
 // - Automatic dark mode adaptation
 // - SF Symbol icon support with multiple rendering modes
 ```
@@ -198,5 +198,5 @@ So far, this is more of a proof of concept than a full package (although the inc
 - Investigate how to best combine scroll views with the native components.
 - macOS compiles and runs, but it's untested with Liquid Glass and generally doesn't look great.
 
-## How was this done?z
+## How was this done?
 Pretty much vibe-coded with Codex and GPT-5. 😅
