@@ -202,7 +202,7 @@ class CupertinoAlertDialogPlatformView: NSObject, FlutterPlatformView {
       }
     }
     
-    // Add icon if provided
+    // Add icon if provided - create custom view with icon and message
     if let iconName = iconName, let image = UIImage(systemName: iconName) {
       var finalImage = image
       
@@ -244,10 +244,62 @@ class CupertinoAlertDialogPlatformView: NSObject, FlutterPlatformView {
         }
       }
       
-      // Add image to alert (iOS 15+)
-      if #available(iOS 15.0, *) {
-        alert.setValue(finalImage, forKey: "image")
+      // Create a custom content view controller
+      let contentViewController = UIViewController()
+      
+      // Create image view for icon
+      let imageView = UIImageView(image: finalImage)
+      imageView.translatesAutoresizingMaskIntoConstraints = false
+      imageView.contentMode = .scaleAspectFit
+      contentViewController.view.addSubview(imageView)
+      
+      // Create label for message if we have one
+      if let messageText = message, !messageText.isEmpty {
+        let messageLabel = UILabel()
+        messageLabel.text = messageText
+        messageLabel.numberOfLines = 0
+        messageLabel.textAlignment = .center
+        messageLabel.font = UIFont.systemFont(ofSize: 13)
+        messageLabel.textColor = .secondaryLabel
+        messageLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentViewController.view.addSubview(messageLabel)
+        
+        // Layout: icon on top, message below
+        NSLayoutConstraint.activate([
+          // Icon constraints
+          imageView.topAnchor.constraint(equalTo: contentViewController.view.topAnchor, constant: 8),
+          imageView.centerXAnchor.constraint(equalTo: contentViewController.view.centerXAnchor),
+          imageView.widthAnchor.constraint(equalToConstant: iconSize ?? 24),
+          imageView.heightAnchor.constraint(equalToConstant: iconSize ?? 24),
+          
+          // Message constraints
+          messageLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 8),
+          messageLabel.leadingAnchor.constraint(equalTo: contentViewController.view.leadingAnchor, constant: 16),
+          messageLabel.trailingAnchor.constraint(equalTo: contentViewController.view.trailingAnchor, constant: -16),
+          messageLabel.bottomAnchor.constraint(equalTo: contentViewController.view.bottomAnchor, constant: -8),
+          
+          // Container width and height
+          contentViewController.view.widthAnchor.constraint(equalToConstant: 250),
+          contentViewController.view.heightAnchor.constraint(greaterThanOrEqualToConstant: 60)
+        ])
+        
+        // Clear the original message since we're showing it in our custom view
+        alert.message = nil
+      } else {
+        // No message, just center the icon
+        NSLayoutConstraint.activate([
+          imageView.centerXAnchor.constraint(equalTo: contentViewController.view.centerXAnchor),
+          imageView.centerYAnchor.constraint(equalTo: contentViewController.view.centerYAnchor),
+          imageView.widthAnchor.constraint(equalToConstant: iconSize ?? 24),
+          imageView.heightAnchor.constraint(equalToConstant: iconSize ?? 24),
+          
+          contentViewController.view.widthAnchor.constraint(equalToConstant: 250),
+          contentViewController.view.heightAnchor.constraint(equalToConstant: 60)
+        ])
       }
+      
+      // Set the custom view controller as the content
+      alert.setValue(contentViewController, forKey: "contentViewController")
     }
     
     // Add actions
