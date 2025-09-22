@@ -303,6 +303,23 @@ class CupertinoAlertDialogPlatformView: NSObject, FlutterPlatformView {
     }
     
     // Add actions
+    var destructiveAction: UIAlertAction?
+    var cancelAction: UIAlertAction?
+    var primaryAction: UIAlertAction?
+    var successAction: UIAlertAction?
+    
+    // Determine which action will be preferred (priority: primary > cancel)
+    var preferredActionStyle: String?
+    for (index, _) in actionTitles.enumerated() {
+      let style = index < actionStyles.count ? actionStyles[index] : "defaultAction"
+      
+      if style == "primary" && preferredActionStyle == nil {
+        preferredActionStyle = "primary"
+      } else if style == "cancel" && preferredActionStyle != "primary" {
+        preferredActionStyle = "cancel"
+      }
+    }
+    
     for (index, actionTitle) in actionTitles.enumerated() {
       let style = index < actionStyles.count ? actionStyles[index] : "defaultAction"
       let enabled = index < actionEnabled.count ? actionEnabled[index] : true
@@ -322,13 +339,14 @@ class CupertinoAlertDialogPlatformView: NSObject, FlutterPlatformView {
       
       switch style {
       case "cancel":
-        alertActionStyle = .cancel
-        textColor = isDarkMode ? UIColor.systemRed.withAlphaComponent(0.9) : .systemRed
+        alertActionStyle = .default // Cancel uses default style (background changes when preferred action)
+        textColor = nil // Preferred action automatically becomes white, otherwise normal
       case "destructive":
-        alertActionStyle = .destructive
+        alertActionStyle = .destructive // Destructive always uses red text
+        textColor = nil // Use Apple's default red text
       case "primary":
-        alertActionStyle = .default
-        textColor = isDarkMode ? UIColor.systemBlue.withAlphaComponent(0.9) : .systemBlue
+        alertActionStyle = .default // Primary uses default style (background changes when preferred action)
+        textColor = UIColor.systemBlue // Blue text when not preferred action
         textFont = .boldSystemFont(ofSize: 17)
       case "secondary":
         alertActionStyle = .default
@@ -355,7 +373,10 @@ class CupertinoAlertDialogPlatformView: NSObject, FlutterPlatformView {
       }
       
       // Apply custom colors safely using attributed title
-      if let color = textColor, style != "destructive" {
+      // Don't apply custom color if this action will be preferred action (it will be white automatically)
+      let isPreferredAction = (style == preferredActionStyle)
+      
+      if let color = textColor, style != "destructive", !isPreferredAction {
         do {
           let attributes: [NSAttributedString.Key: Any] = [
             .foregroundColor: color,
@@ -380,7 +401,32 @@ class CupertinoAlertDialogPlatformView: NSObject, FlutterPlatformView {
       
       action.isEnabled = enabled && style != "disabled"
       alert.addAction(action)
+      
+      // Store actions by type for preferred action setting
+      switch style {
+      case "destructive":
+        destructiveAction = action
+      case "cancel":
+        cancelAction = action
+      case "primary":
+        primaryAction = action
+      case "success":
+        successAction = action
+      default:
+        break
+      }
     }
+    
+    // Set preferred action and tint color based on priority
+    // Destructive actions should never be preferred actions to maintain red text style
+    if let action = primaryAction {
+      alert.preferredAction = action
+      alert.view.tintColor = UIColor.systemBlue // Blue background + white text
+    } else if let action = cancelAction {
+      alert.preferredAction = action
+      alert.view.tintColor = UIColor.systemRed // Red background + white text
+    }
+    // Note: Destructive, success, secondary, warning, info actions use normal background with colored text
     
     // Present the alert
     DispatchQueue.main.async { [weak self] in

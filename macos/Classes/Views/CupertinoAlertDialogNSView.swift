@@ -187,16 +187,28 @@ class CupertinoAlertDialogNSView: NSView {
       case "cancel":
         button.keyEquivalent = "\u{1b}" // Escape key
         if #available(macOS 11.0, *) {
-          button.contentTintColor = isDarkMode ? .systemRed.withAlphaComponent(0.9) : .systemRed
+          button.bezelStyle = .rounded
+          button.contentTintColor = .white
+          // Set red background for cancel buttons
+          button.layer?.backgroundColor = NSColor.systemRed.cgColor
+          button.layer?.cornerRadius = 6
         }
       case "destructive":
         if #available(macOS 11.0, *) {
           button.hasDestructiveAction = true
+          button.bezelStyle = .rounded
+          button.contentTintColor = .white
+          // Set red background for destructive buttons
+          button.layer?.backgroundColor = NSColor.systemRed.cgColor
+          button.layer?.cornerRadius = 6
         }
       case "primary":
         if #available(macOS 11.0, *) {
           button.bezelStyle = .rounded
-          button.contentTintColor = isDarkMode ? .systemBlue.withAlphaComponent(0.9) : .systemBlue
+          button.contentTintColor = .white
+          // Set blue background for primary buttons
+          button.layer?.backgroundColor = NSColor.systemBlue.cgColor
+          button.layer?.cornerRadius = 6
         }
         button.keyEquivalent = "\r" // Return key for primary action
       case "secondary":
