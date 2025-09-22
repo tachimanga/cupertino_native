@@ -1,7 +1,5 @@
-import 'package:cupertino_native/components/alert_dialog.dart';
 import 'package:cupertino_native/cupertino_native.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 
 class AlertDialogDemoPage extends StatefulWidget {
   const AlertDialogDemoPage({super.key});
@@ -38,14 +36,14 @@ class _AlertDialogDemoPageState extends State<AlertDialogDemoPage> {
       actions: [
         CNAlertAction(
           title: 'Cancel',
-          style: CNAlertActionStyle.cancel,
+          style: CNAlertActionStyle.defaultAction,
           onPressed: () {
             setState(() => _lastAction = 'Cancel pressed');
           },
         ),
         CNAlertAction(
           title: 'Delete',
-          style: CNAlertActionStyle.destructive,
+          style: CNAlertActionStyle.cancel,
           onPressed: () {
             setState(() => _lastAction = 'Delete pressed');
           },
@@ -63,6 +61,7 @@ class _AlertDialogDemoPageState extends State<AlertDialogDemoPage> {
       actions: [
         CNAlertAction(
           title: 'Save',
+          style: CNAlertActionStyle.primary,
           onPressed: () {
             setState(() => _lastAction = 'Save pressed');
           },
@@ -75,7 +74,7 @@ class _AlertDialogDemoPageState extends State<AlertDialogDemoPage> {
         ),
         CNAlertAction(
           title: 'Cancel',
-          style: CNAlertActionStyle.cancel,
+          style: CNAlertActionStyle.defaultAction,
           onPressed: () {
             setState(() => _lastAction = 'Cancel pressed');
           },
@@ -95,16 +94,15 @@ class _AlertDialogDemoPageState extends State<AlertDialogDemoPage> {
       actions: [
         CNAlertAction(
           title: 'Retry',
-          style: CNAlertActionStyle.defaultAction,
+          style: CNAlertActionStyle.primary,
           onPressed: () {
             setState(() => _lastAction = 'Retry pressed');
           },
         ),
         CNAlertAction(
           title: 'Cancel',
-          style: CNAlertActionStyle.cancel,
+          style: CNAlertActionStyle.defaultAction,
           onPressed: () {
-            print("object");
             setState(() => _lastAction = 'Cancel pressed');
           },
         ),
@@ -276,18 +274,6 @@ class _AlertDialogDemoPageState extends State<AlertDialogDemoPage> {
           ],
         ],
       ),
-    );
-  }
-
-  Widget _buildDemoButton({
-    required String title,
-    required String description,
-    required VoidCallback onPressed,
-  }) {
-    return CupertinoListTile(
-      title: Text(title),
-      onTap: onPressed,
-      subtitle: Text(description),
     );
   }
 }

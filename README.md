@@ -96,6 +96,14 @@ CNButton.icon(
   icon: const CNSymbol('heart.fill'),
   onPressed: () {},
 )
+
+// Button with child variant
+CNButton.child(
+  child: Container(
+    child: Text("Press me"),
+  ),
+  onPressed: () {},
+)
 ```
 
 ### Icon (SF Symbols)

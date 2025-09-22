@@ -141,29 +141,60 @@ class _ButtonDemoPageState extends State<ButtonDemoPage> {
               runSpacing: 12,
               children: [
                 CNButton.child(
-                  child: const Text('Custom Child'),
                   style: CNButtonStyle.borderedProminent,
                   onPressed: () => _set('Child Button'),
                   shrinkWrap: true,
+                  child: const Text('Custom Child'),
                 ),
-                CNButton.child(
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(CupertinoIcons.heart_fill, size: 16),
-                      SizedBox(width: 8),
-                      Text('With Icon'),
-                    ],
+                SizedBox(
+                  height: 70,
+                  child: CNButton.child(
+                    style: CNButtonStyle.prominentGlass,
+                    onPressed: () => _set('Child with Icon Prominent Glass'),
+                    shrinkWrap: true,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            CupertinoIcons.heart_fill,
+                            size: 30,
+                            color: CupertinoColors.white,
+                          ),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Title',
+                                  style: TextStyle(
+                                    color: CupertinoColors.white,
+                                    fontSize: 24,
+                                  ),
+                                ),
+                                Text(
+                                  'Child with Icon Prominent Glass',
+                                  style: TextStyle(
+                                    color: CupertinoColors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  style: CNButtonStyle.filled,
-                  onPressed: () => _set('Child with Icon'),
-                  shrinkWrap: true,
                 ),
                 CNButton.child(
-                  child: const Text('Disabled'),
                   style: CNButtonStyle.tinted,
                   onPressed: null,
                   shrinkWrap: true,
+                  child: const Text('Disabled'),
                 ),
               ],
             ),

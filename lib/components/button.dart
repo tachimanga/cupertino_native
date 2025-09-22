@@ -53,7 +53,7 @@ class CNButton extends StatefulWidget {
     this.tint,
     this.height = 32.0,
     this.shrinkWrap = false,
-    this.style = CNButtonStyle.plain,
+    this.style = CNButtonStyle.prominentGlass,
   }) : label = null,
        icon = null,
        width = null,
