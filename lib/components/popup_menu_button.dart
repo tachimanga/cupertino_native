@@ -133,6 +133,18 @@ class _CNPopupMenuButtonState<T> extends State<CNPopupMenuButton<T>> {
   @override
   void didUpdateWidget(covariant CNPopupMenuButton<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
+
+    // Reset intrinsic width when button label changes to force recalculation
+    if (oldWidget.buttonLabel != widget.buttonLabel) {
+      _intrinsicWidth = null;
+      // Force immediate rebuild with new label
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {});
+        }
+      });
+    }
+
     _syncPropsToNativeIfNeeded();
   }
 
@@ -302,12 +314,37 @@ class _CNPopupMenuButtonState<T> extends State<CNPopupMenuButton<T>> {
         final hasBoundedWidth = constraints.hasBoundedWidth;
         // If shrinkWrap or width is unbounded (e.g. inside a Row), prefer intrinsic width.
         final preferIntrinsic = widget.shrinkWrap || !hasBoundedWidth;
+
         double? width;
         if (widget.isIconButton) {
           // Fixed circle size for icon buttons
           width = widget.width ?? widget.height;
         } else if (preferIntrinsic) {
-          width = _intrinsicWidth ?? 80.0;
+          if (_intrinsicWidth != null) {
+            width = _intrinsicWidth;
+          } else {
+            // More accurate width estimation based on current button label
+            final label = widget.buttonLabel ?? '';
+            // Use a more sophisticated calculation considering font size and padding
+            final textPainter = TextPainter(
+              text: TextSpan(
+                text: label,
+                style: const TextStyle(
+                  fontSize: 17.0,
+                ), // Default iOS button font size
+              ),
+              textDirection: TextDirection.ltr,
+            );
+            textPainter.layout();
+            final textWidth = textPainter.size.width;
+            // Add padding for button chrome (left/right padding + dropdown arrow space)
+            final estimatedWidth = textWidth + 40.0; // Reduced padding
+            width = estimatedWidth.clamp(
+              80.0,
+              250.0,
+            ); // More reasonable max width
+            textPainter.dispose();
+          }
         }
         return Listener(
           onPointerDown: (e) {
@@ -333,7 +370,11 @@ class _CNPopupMenuButtonState<T> extends State<CNPopupMenuButton<T>> {
           },
           child: SizedBox(
             height: widget.height,
-            width: width,
+            width:
+                widget.width ??
+                (preferIntrinsic
+                    ? width
+                    : (hasBoundedWidth ? constraints.maxWidth : null)),
             child: platformView,
           ),
         );
@@ -394,7 +435,31 @@ class _CNPopupMenuButtonState<T> extends State<CNPopupMenuButton<T>> {
       final size = await ch.invokeMethod<Map>('getIntrinsicSize');
       final w = (size?['width'] as num?)?.toDouble();
       if (w != null && mounted) {
-        setState(() => _intrinsicWidth = w);
+        // Validate if the returned width makes sense for current label
+        final label = widget.buttonLabel ?? '';
+        final textPainter = TextPainter(
+          text: TextSpan(text: label, style: const TextStyle(fontSize: 17.0)),
+          textDirection: TextDirection.ltr,
+        );
+        textPainter.layout();
+        final textWidth = textPainter.size.width;
+        final expectedMinWidth = textWidth + 30.0; // Reduced minimum padding
+        textPainter.dispose();
+
+        // Only use native width if it's reasonable for current label
+        if (w >= expectedMinWidth * 0.9) {
+          // Allow 10% tolerance
+          setState(() => _intrinsicWidth = w);
+        } else {
+          // Keep using estimated width, don't update _intrinsicWidth
+        }
+
+        // Force a rebuild immediately after validation
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() {});
+          }
+        });
       }
     } catch (_) {}
   }
@@ -455,6 +520,8 @@ class _CNPopupMenuButtonState<T> extends State<CNPopupMenuButton<T>> {
       _lastStyle = widget.buttonStyle;
     }
     if (_lastTitle != widget.buttonLabel && widget.buttonLabel != null) {
+      // Clear old intrinsic width immediately when title changes
+      _intrinsicWidth = null;
       await ch.invokeMethod('setButtonTitle', {'title': widget.buttonLabel});
       _lastTitle = widget.buttonLabel;
       _requestIntrinsicSize();
