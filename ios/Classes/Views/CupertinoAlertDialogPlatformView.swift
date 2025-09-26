@@ -204,8 +204,141 @@ class CupertinoAlertDialogPlatformView: NSObject, FlutterPlatformView {
       }
     }
     
-    // Add icon if provided - create custom view with icon and message
-    if let iconName = iconName, let image = UIImage(systemName: iconName) {
+    // If OTP code is provided, create custom layout: icon → title → description → OTP
+    if let otpCode = oneTimeCode {
+      // Custom layout with OTP - always use custom view
+      let contentViewController = UIViewController()
+      var constraints: [NSLayoutConstraint] = []
+      var currentTopAnchor: NSLayoutYAxisAnchor = contentViewController.view.topAnchor
+      var currentTopConstant: CGFloat = 16
+      
+      // 1. Icon (if provided)
+      if let iconName = iconName, let image = UIImage(systemName: iconName) {
+        var finalImage = image
+        
+        // Apply icon styling
+        if let size = iconSize {
+          let config = UIImage.SymbolConfiguration(pointSize: size)
+          finalImage = finalImage.withConfiguration(config)
+        }
+        if let color = iconColor {
+          finalImage = finalImage.withTintColor(color, renderingMode: .alwaysOriginal)
+        }
+        if let mode = iconMode {
+          switch mode {
+          case "template":
+            finalImage = finalImage.withRenderingMode(.alwaysTemplate)
+          case "original":
+            finalImage = finalImage.withRenderingMode(.alwaysOriginal)
+          case "hierarchical":
+            if #available(iOS 15.0, *) {
+              let config = UIImage.SymbolConfiguration(hierarchicalColor: iconColor ?? .label)
+              finalImage = finalImage.withConfiguration(config)
+            }
+          case "palette":
+            if #available(iOS 15.0, *), !iconPalette.isEmpty {
+              let config = UIImage.SymbolConfiguration(paletteColors: iconPalette)
+              finalImage = finalImage.withConfiguration(config)
+            }
+          case "multicolor":
+            if #available(iOS 15.0, *) {
+              let config = UIImage.SymbolConfiguration.preferringMulticolor()
+              finalImage = finalImage.withConfiguration(config)
+            }
+          default:
+            break
+          }
+        }
+        
+        let imageView = UIImageView(image: finalImage)
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.contentMode = .scaleAspectFit
+        contentViewController.view.addSubview(imageView)
+        
+        constraints.append(contentsOf: [
+          imageView.topAnchor.constraint(equalTo: currentTopAnchor, constant: currentTopConstant),
+          imageView.centerXAnchor.constraint(equalTo: contentViewController.view.centerXAnchor),
+          imageView.widthAnchor.constraint(equalToConstant: iconSize ?? 32),
+          imageView.heightAnchor.constraint(equalToConstant: iconSize ?? 32)
+        ])
+        
+        currentTopAnchor = imageView.bottomAnchor
+        currentTopConstant = 12
+      }
+      
+      // 2. Title
+      let titleLabel = UILabel()
+      titleLabel.text = title
+      titleLabel.font = UIFont.boldSystemFont(ofSize: 17)
+      titleLabel.textColor = .label
+      titleLabel.textAlignment = .center
+      titleLabel.numberOfLines = 0
+      titleLabel.translatesAutoresizingMaskIntoConstraints = false
+      contentViewController.view.addSubview(titleLabel)
+      
+      constraints.append(contentsOf: [
+        titleLabel.topAnchor.constraint(equalTo: currentTopAnchor, constant: currentTopConstant),
+        titleLabel.leadingAnchor.constraint(equalTo: contentViewController.view.leadingAnchor, constant: 20),
+        titleLabel.trailingAnchor.constraint(equalTo: contentViewController.view.trailingAnchor, constant: -20)
+      ])
+      
+      currentTopAnchor = titleLabel.bottomAnchor
+      currentTopConstant = 8
+      
+      // 3. Description (if provided)
+      if let messageText = message, !messageText.isEmpty {
+        let messageLabel = UILabel()
+        messageLabel.text = messageText
+        messageLabel.font = UIFont.systemFont(ofSize: 13)
+        messageLabel.textColor = .secondaryLabel
+        messageLabel.textAlignment = .center
+        messageLabel.numberOfLines = 0
+        messageLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentViewController.view.addSubview(messageLabel)
+        
+        constraints.append(contentsOf: [
+          messageLabel.topAnchor.constraint(equalTo: currentTopAnchor, constant: currentTopConstant),
+          messageLabel.leadingAnchor.constraint(equalTo: contentViewController.view.leadingAnchor, constant: 20),
+          messageLabel.trailingAnchor.constraint(equalTo: contentViewController.view.trailingAnchor, constant: -20)
+        ])
+        
+        currentTopAnchor = messageLabel.bottomAnchor
+        currentTopConstant = 12
+      }
+      
+      // 4. OTP Code
+      let otpLabel = UILabel()
+      otpLabel.text = otpCode
+      otpLabel.font = UIFont.monospacedSystemFont(ofSize: 28, weight: .bold)
+      otpLabel.textColor = .label
+      otpLabel.textAlignment = .center
+      otpLabel.layer.cornerRadius = 8
+      otpLabel.layer.masksToBounds = true
+      otpLabel.translatesAutoresizingMaskIntoConstraints = false
+      contentViewController.view.addSubview(otpLabel)
+      
+      constraints.append(contentsOf: [
+        otpLabel.topAnchor.constraint(equalTo: currentTopAnchor, constant: currentTopConstant),
+        otpLabel.centerXAnchor.constraint(equalTo: contentViewController.view.centerXAnchor),
+        otpLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 120),
+        otpLabel.heightAnchor.constraint(equalToConstant: 44),
+        // Azaltılmış bottom constraint - önceden -16 idi, şimdi -8
+        otpLabel.bottomAnchor.constraint(equalTo: contentViewController.view.bottomAnchor, constant: -8),
+        
+        // Container constraints
+        contentViewController.view.widthAnchor.constraint(equalToConstant: 280),
+        contentViewController.view.heightAnchor.constraint(greaterThanOrEqualToConstant: 80)
+      ])
+      
+      NSLayoutConstraint.activate(constraints)
+      
+      // Clear alert's title and message since we're using custom view
+      alert.title = nil
+      alert.message = nil
+      alert.setValue(contentViewController, forKey: "contentViewController")
+      
+    } else if let iconName = iconName, let image = UIImage(systemName: iconName) {
+      // Original icon-only logic (no OTP)
       var finalImage = image
       
       // Apply size
@@ -304,7 +437,8 @@ class CupertinoAlertDialogPlatformView: NSObject, FlutterPlatformView {
           messageLabel.topAnchor.constraint(equalTo: topElementForMessage.bottomAnchor, constant: 8),
           messageLabel.leadingAnchor.constraint(equalTo: contentViewController.view.leadingAnchor, constant: 16),
           messageLabel.trailingAnchor.constraint(equalTo: contentViewController.view.trailingAnchor, constant: -16),
-          messageLabel.bottomAnchor.constraint(equalTo: contentViewController.view.bottomAnchor, constant: -8),
+          // Azaltılmış bottom constraint
+          messageLabel.bottomAnchor.constraint(equalTo: contentViewController.view.bottomAnchor, constant: -4),
           
           // Container width and height
           contentViewController.view.widthAnchor.constraint(equalToConstant: 250),
@@ -327,7 +461,8 @@ class CupertinoAlertDialogPlatformView: NSObject, FlutterPlatformView {
             
             otpLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 8),
             otpLabel.centerXAnchor.constraint(equalTo: contentViewController.view.centerXAnchor),
-            otpLabel.bottomAnchor.constraint(equalTo: contentViewController.view.bottomAnchor, constant: -8),
+            // Azaltılmış bottom constraint
+            otpLabel.bottomAnchor.constraint(equalTo: contentViewController.view.bottomAnchor, constant: -4),
             
             contentViewController.view.widthAnchor.constraint(equalToConstant: 250),
             contentViewController.view.heightAnchor.constraint(greaterThanOrEqualToConstant: 60)
@@ -382,7 +517,8 @@ class CupertinoAlertDialogPlatformView: NSObject, FlutterPlatformView {
           messageLabel.topAnchor.constraint(equalTo: otpLabel.bottomAnchor, constant: 8),
           messageLabel.leadingAnchor.constraint(equalTo: contentViewController.view.leadingAnchor, constant: 16),
           messageLabel.trailingAnchor.constraint(equalTo: contentViewController.view.trailingAnchor, constant: -16),
-          messageLabel.bottomAnchor.constraint(equalTo: contentViewController.view.bottomAnchor, constant: -8),
+          // Azaltılmış bottom constraint
+          messageLabel.bottomAnchor.constraint(equalTo: contentViewController.view.bottomAnchor, constant: -4),
           
           // Container width and height
           contentViewController.view.widthAnchor.constraint(equalToConstant: 250),
