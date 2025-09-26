@@ -27,6 +27,32 @@ class _AlertDialogDemoPageState extends State<AlertDialogDemoPage> {
     );
   }
 
+  void _showOTPAlert() {
+    CNAlertDialog.show(
+      context: context,
+      title: "Apple ID Verification Code",
+      message: "Enter this verification code on your device to sign in.",
+      oneTimeCode: "345 678",
+      actions: [
+        CNAlertAction(
+          title: "Close",
+          style: CNAlertActionStyle.destructive,
+          onPressed: () {},
+        ),
+        CNAlertAction(
+          title: "Copy Code",
+          style: CNAlertActionStyle.primary,
+          onPressed: () {},
+        ),
+      ],
+      icon: const CNSymbol(
+        'lock.shield',
+        size: 32,
+        color: CupertinoColors.black,
+      ),
+    );
+  }
+
   void _showConfirmationAlert() {
     CNAlertDialog.show(
       context: context,
@@ -213,6 +239,13 @@ class _AlertDialogDemoPageState extends State<AlertDialogDemoPage> {
                 leading: const Icon(CupertinoIcons.exclamationmark_circle),
                 subtitle: Text('Basic alert with glass effect'),
                 onTap: _showSimpleAlert,
+              ),
+
+              CupertinoListTile(
+                title: Text('OTP Alert'),
+                leading: const Icon(CupertinoIcons.lock_shield),
+                subtitle: Text('One-time password verification'),
+                onTap: _showOTPAlert,
               ),
 
               CupertinoListTile(
