@@ -211,3 +211,11 @@ So far, this is more of a proof of concept than a full package (although the inc
 
 ## How was this done?
 Pretty much vibe-coded with Codex and GPT-5. 😅
+
+## Contributors
+
+<p align="center">
+  <a href="https://github.com/berkaycatak">
+    <img src="https://avatars.githubusercontent.com/u/34205493?v=4" width="80" style="border-radius:50%; margin: 10px;" />
+  </a>
+</p>
