@@ -97,6 +97,7 @@ class CupertinoAlertDialogPlatformView: NSObject, FlutterPlatformView {
     var iconMode: String? = nil
     var iconPalette: [UIColor] = []
     var iconGradient: Bool = false
+    var oneTimeCode: String? = nil
     var isDark: Bool = false
     var tint: UIColor? = nil
     var alertStyleParam: String = "glass"
@@ -115,6 +116,7 @@ class CupertinoAlertDialogPlatformView: NSObject, FlutterPlatformView {
         iconPalette = ip.map { Self.colorFromARGB($0.intValue) }
       }
       if let ig = dict["iconGradientEnabled"] as? Bool { iconGradient = ig }
+      if let otc = dict["oneTimeCode"] as? String { oneTimeCode = otc }
       if let v = dict["isDark"] as? NSNumber { isDark = v.boolValue }
       if let style = dict["style"] as? [String: Any], let n = style["tint"] as? NSNumber { 
         tint = Self.colorFromARGB(n.intValue) 
@@ -130,7 +132,7 @@ class CupertinoAlertDialogPlatformView: NSObject, FlutterPlatformView {
                actionStyles: actionStyles, actionEnabled: actionEnabled,
                iconName: iconName, iconSize: iconSize, iconColor: iconColor,
                iconMode: iconMode, iconPalette: iconPalette, iconGradient: iconGradient,
-               isDark: isDark, tint: tint)
+               oneTimeCode: oneTimeCode, isDark: isDark, tint: tint)
     
     self.channel.setMethodCallHandler(onMethodCall)
   }
@@ -143,7 +145,7 @@ class CupertinoAlertDialogPlatformView: NSObject, FlutterPlatformView {
                          actionStyles: [String], actionEnabled: [Bool],
                          iconName: String?, iconSize: CGFloat?, iconColor: UIColor?,
                          iconMode: String?, iconPalette: [UIColor], iconGradient: Bool,
-                         isDark: Bool, tint: UIColor?) {
+                         oneTimeCode: String?, isDark: Bool, tint: UIColor?) {
     
     // Create TintAdjustingAlertController instead of UIAlertController
     alertController = TintAdjustingAlertController(title: title, message: message, preferredStyle: .alert)
@@ -253,6 +255,18 @@ class CupertinoAlertDialogPlatformView: NSObject, FlutterPlatformView {
       imageView.contentMode = .scaleAspectFit
       contentViewController.view.addSubview(imageView)
       
+      // Create label for OTP code if we have one
+      var otpLabel: UILabel? = nil
+      if let otpCode = oneTimeCode {
+        otpLabel = UILabel()
+        otpLabel!.text = otpCode
+        otpLabel!.font = UIFont.monospacedSystemFont(ofSize: 20, weight: .bold)
+        otpLabel!.textColor = .label
+        otpLabel!.textAlignment = .center
+        otpLabel!.translatesAutoresizingMaskIntoConstraints = false
+        contentViewController.view.addSubview(otpLabel!)
+      }
+      
       // Create label for message if we have one
       if let messageText = message, !messageText.isEmpty {
         let messageLabel = UILabel()
@@ -264,16 +278,108 @@ class CupertinoAlertDialogPlatformView: NSObject, FlutterPlatformView {
         messageLabel.translatesAutoresizingMaskIntoConstraints = false
         contentViewController.view.addSubview(messageLabel)
         
-        // Layout: icon on top, message below
-        NSLayoutConstraint.activate([
+        // Layout: icon on top, OTP (if exists), message below
+        var constraints: [NSLayoutConstraint] = [
           // Icon constraints
           imageView.topAnchor.constraint(equalTo: contentViewController.view.topAnchor, constant: 8),
           imageView.centerXAnchor.constraint(equalTo: contentViewController.view.centerXAnchor),
           imageView.widthAnchor.constraint(equalToConstant: iconSize ?? 24),
           imageView.heightAnchor.constraint(equalToConstant: iconSize ?? 24),
+        ]
+        
+        let topElementForMessage: UIView
+        if let otpLabel = otpLabel {
+          // OTP constraints (below icon)
+          constraints.append(contentsOf: [
+            otpLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 8),
+            otpLabel.centerXAnchor.constraint(equalTo: contentViewController.view.centerXAnchor),
+          ])
+          topElementForMessage = otpLabel
+        } else {
+          topElementForMessage = imageView
+        }
+        
+        // Message constraints
+        constraints.append(contentsOf: [
+          messageLabel.topAnchor.constraint(equalTo: topElementForMessage.bottomAnchor, constant: 8),
+          messageLabel.leadingAnchor.constraint(equalTo: contentViewController.view.leadingAnchor, constant: 16),
+          messageLabel.trailingAnchor.constraint(equalTo: contentViewController.view.trailingAnchor, constant: -16),
+          messageLabel.bottomAnchor.constraint(equalTo: contentViewController.view.bottomAnchor, constant: -8),
+          
+          // Container width and height
+          contentViewController.view.widthAnchor.constraint(equalToConstant: 250),
+          contentViewController.view.heightAnchor.constraint(greaterThanOrEqualToConstant: 60)
+        ])
+        
+        NSLayoutConstraint.activate(constraints)
+        
+        // Clear the original message since we're showing it in our custom view
+        alert.message = nil
+      } else {
+        // No message, just center the icon and OTP
+        if let otpLabel = otpLabel {
+          // Icon on top, OTP below, both centered
+          NSLayoutConstraint.activate([
+            imageView.topAnchor.constraint(equalTo: contentViewController.view.topAnchor, constant: 8),
+            imageView.centerXAnchor.constraint(equalTo: contentViewController.view.centerXAnchor),
+            imageView.widthAnchor.constraint(equalToConstant: iconSize ?? 24),
+            imageView.heightAnchor.constraint(equalToConstant: iconSize ?? 24),
+            
+            otpLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 8),
+            otpLabel.centerXAnchor.constraint(equalTo: contentViewController.view.centerXAnchor),
+            otpLabel.bottomAnchor.constraint(equalTo: contentViewController.view.bottomAnchor, constant: -8),
+            
+            contentViewController.view.widthAnchor.constraint(equalToConstant: 250),
+            contentViewController.view.heightAnchor.constraint(greaterThanOrEqualToConstant: 60)
+          ])
+        } else {
+          // Just icon, centered
+          NSLayoutConstraint.activate([
+            imageView.centerXAnchor.constraint(equalTo: contentViewController.view.centerXAnchor),
+            imageView.centerYAnchor.constraint(equalTo: contentViewController.view.centerYAnchor),
+            imageView.widthAnchor.constraint(equalToConstant: iconSize ?? 24),
+            imageView.heightAnchor.constraint(equalToConstant: iconSize ?? 24),
+            
+            contentViewController.view.widthAnchor.constraint(equalToConstant: 250),
+            contentViewController.view.heightAnchor.constraint(equalToConstant: 60)
+          ])
+        }
+      }
+      
+      // Set the custom view controller as the content
+      alert.setValue(contentViewController, forKey: "contentViewController")
+    } else if let otpCode = oneTimeCode {
+      // Only OTP code, no icon
+      let contentViewController = UIViewController()
+      
+      // Create label for OTP code
+      let otpLabel = UILabel()
+      otpLabel.text = otpCode
+      otpLabel.font = UIFont.monospacedSystemFont(ofSize: 24, weight: .bold)
+      otpLabel.textColor = .label
+      otpLabel.textAlignment = .center
+      otpLabel.translatesAutoresizingMaskIntoConstraints = false
+      contentViewController.view.addSubview(otpLabel)
+      
+      // Create label for message if we have one
+      if let messageText = message, !messageText.isEmpty {
+        let messageLabel = UILabel()
+        messageLabel.text = messageText
+        messageLabel.numberOfLines = 0
+        messageLabel.textAlignment = .center
+        messageLabel.font = UIFont.systemFont(ofSize: 13)
+        messageLabel.textColor = .secondaryLabel
+        messageLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentViewController.view.addSubview(messageLabel)
+        
+        // Layout: OTP on top, message below
+        NSLayoutConstraint.activate([
+          // OTP constraints
+          otpLabel.topAnchor.constraint(equalTo: contentViewController.view.topAnchor, constant: 8),
+          otpLabel.centerXAnchor.constraint(equalTo: contentViewController.view.centerXAnchor),
           
           // Message constraints
-          messageLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 8),
+          messageLabel.topAnchor.constraint(equalTo: otpLabel.bottomAnchor, constant: 8),
           messageLabel.leadingAnchor.constraint(equalTo: contentViewController.view.leadingAnchor, constant: 16),
           messageLabel.trailingAnchor.constraint(equalTo: contentViewController.view.trailingAnchor, constant: -16),
           messageLabel.bottomAnchor.constraint(equalTo: contentViewController.view.bottomAnchor, constant: -8),
@@ -286,12 +392,10 @@ class CupertinoAlertDialogPlatformView: NSObject, FlutterPlatformView {
         // Clear the original message since we're showing it in our custom view
         alert.message = nil
       } else {
-        // No message, just center the icon
+        // No message, just center the OTP
         NSLayoutConstraint.activate([
-          imageView.centerXAnchor.constraint(equalTo: contentViewController.view.centerXAnchor),
-          imageView.centerYAnchor.constraint(equalTo: contentViewController.view.centerYAnchor),
-          imageView.widthAnchor.constraint(equalToConstant: iconSize ?? 24),
-          imageView.heightAnchor.constraint(equalToConstant: iconSize ?? 24),
+          otpLabel.centerXAnchor.constraint(equalTo: contentViewController.view.centerXAnchor),
+          otpLabel.centerYAnchor.constraint(equalTo: contentViewController.view.centerYAnchor),
           
           contentViewController.view.widthAnchor.constraint(equalToConstant: 250),
           contentViewController.view.heightAnchor.constraint(equalToConstant: 60)

@@ -73,6 +73,7 @@ class CNAlertDialog extends StatefulWidget {
     this.message,
     required this.actions,
     this.icon,
+    this.oneTimeCode,
   });
 
   /// The title of the alert dialog.
@@ -87,6 +88,9 @@ class CNAlertDialog extends StatefulWidget {
   /// Optional icon to display in the alert.
   final CNSymbol? icon;
 
+  /// Optional 6-digit one-time code to display.
+  final String? oneTimeCode;
+
   /// Shows the alert dialog as a modal.
   static Future<void> show({
     required BuildContext context,
@@ -94,6 +98,7 @@ class CNAlertDialog extends StatefulWidget {
     String? message,
     required List<CNAlertAction> actions,
     CNSymbol? icon,
+    String? oneTimeCode,
   }) {
     return showCupertinoDialog<void>(
       context: context,
@@ -102,6 +107,7 @@ class CNAlertDialog extends StatefulWidget {
         message: message,
         actions: actions,
         icon: icon,
+        oneTimeCode: oneTimeCode,
       ),
     );
   }
@@ -166,6 +172,7 @@ class _CNAlertDialogState extends State<CNAlertDialog> {
       if (widget.icon?.size != null) 'iconSize': widget.icon!.size,
       if (widget.icon?.color != null)
         'iconColor': resolveColorToArgb(widget.icon!.color, context),
+      if (widget.oneTimeCode != null) 'oneTimeCode': widget.oneTimeCode,
       'alertStyle': CNButtonStyle.borderedProminent.name,
       'isDark': _isDark,
       'style': encodeStyle(context, tint: _effectiveTint),
