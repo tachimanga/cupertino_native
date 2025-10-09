@@ -152,9 +152,9 @@ int _tabIndex = 0;
 // Overlay this at the bottom of your page
 CNTabBar(
   items: const [
-    CNTabBarItem(label: 'Home', icon: CNSymbol('house.fill')),
+    CNTabBarItem(label: 'Home', icon: CNSymbol('house.fill'), badge: '3'),
     CNTabBarItem(label: 'Profile', icon: CNSymbol('person.crop.circle')),
-    CNTabBarItem(label: 'Settings', icon: CNSymbol('gearshape.fill')),
+    CNTabBarItem(label: 'Settings', icon: CNSymbol('gearshape.fill'), badge: '!'),
   ],
   currentIndex: _tabIndex,
   onTap: (i) => setState(() => _tabIndex = i),
