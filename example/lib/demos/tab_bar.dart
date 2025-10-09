@@ -55,14 +55,20 @@ class _TabBarDemoPageState extends State<TabBarDemoPage>
             alignment: Alignment.bottomCenter,
             child: CNTabBar(
               items: const [
-                CNTabBarItem(label: 'Home', icon: CNSymbol('house.fill')),
+                CNTabBarItem(
+                  label: 'Home',
+                  icon: CNSymbol('house.fill'),
+                  badge: '3',
+                ),
                 CNTabBarItem(
                   label: 'Profile',
                   icon: CNSymbol('person.crop.circle'),
+                  badge: null,
                 ),
                 CNTabBarItem(
                   label: 'Settings',
                   icon: CNSymbol('gearshape.fill'),
+                  badge: '',
                 ),
                 CNTabBarItem(icon: CNSymbol('magnifyingglass')),
               ],

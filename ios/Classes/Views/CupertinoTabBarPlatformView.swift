@@ -11,6 +11,7 @@ class CupertinoTabBarPlatformView: NSObject, FlutterPlatformView, UITabBarDelega
   private var rightCountVal: Int = 1
   private var currentLabels: [String] = []
   private var currentSymbols: [String] = []
+  private var currentBadges: [String?] = []
   private var leftInsetVal: CGFloat = 0
   private var rightInsetVal: CGFloat = 0
   private var splitSpacingVal: CGFloat = 8
@@ -46,6 +47,12 @@ class CupertinoTabBarPlatformView: NSObject, FlutterPlatformView, UITabBarDelega
       if let s = dict["split"] as? NSNumber { split = s.boolValue }
       if let rc = dict["rightCount"] as? NSNumber { rightCount = rc.intValue }
       if let sp = dict["splitSpacing"] as? NSNumber { splitSpacingVal = CGFloat(truncating: sp) }
+      if let b = dict["badges"] as? [Any] {
+        currentBadges = b.map { v in
+          if v is NSNull { return nil }
+          return (v as? String)
+        }
+      }
       // content insets controlled by Flutter padding; keep zero here
     }
 
@@ -64,7 +71,13 @@ class CupertinoTabBarPlatformView: NSObject, FlutterPlatformView, UITabBarDelega
         var image: UIImage? = nil
         if i < symbols.count { image = UIImage(systemName: symbols[i]) }
         let title = (i < labels.count) ? labels[i] : nil
-        items.append(UITabBarItem(title: title, image: image, selectedImage: image))
+        let item = UITabBarItem(title: title, image: image, selectedImage: image)
+        // Apply initial badge if available
+        let badgeIdx = i
+        if badgeIdx < currentBadges.count {
+          item.badgeValue = currentBadges[badgeIdx]
+        }
+        items.append(item)
       }
       return items
     }
@@ -150,6 +163,10 @@ class CupertinoTabBarPlatformView: NSObject, FlutterPlatformView, UITabBarDelega
     self.currentSymbols = symbols
     self.leftInsetVal = leftInset
     self.rightInsetVal = rightInset
+    // Ensure badges array aligns with items count
+    if currentBadges.count < max(labels.count, symbols.count) {
+      currentBadges += Array(repeating: nil, count: max(labels.count, symbols.count) - currentBadges.count)
+    }
 channel.setMethodCallHandler { [weak self] call, result in
       guard let self = self else { result(nil); return }
       switch call.method {
@@ -164,6 +181,12 @@ channel.setMethodCallHandler { [weak self] call, result in
         if let args = call.arguments as? [String: Any] {
           let labels = (args["labels"] as? [String]) ?? []
           let symbols = (args["sfSymbols"] as? [String]) ?? []
+          if let b = args["badges"] as? [Any] {
+            self.currentBadges = b.map { v in
+              if v is NSNull { return nil }
+              return (v as? String)
+            }
+          }
           let selectedIndex = (args["selectedIndex"] as? NSNumber)?.intValue ?? 0
           self.currentLabels = labels
           self.currentSymbols = symbols
@@ -173,7 +196,12 @@ channel.setMethodCallHandler { [weak self] call, result in
               var image: UIImage? = nil
               if i < symbols.count { image = UIImage(systemName: symbols[i]) }
               let title = (i < labels.count) ? labels[i] : nil
-              items.append(UITabBarItem(title: title, image: image, selectedImage: image))
+              let item = UITabBarItem(title: title, image: image, selectedImage: image)
+              let badgeIdx = i
+              if badgeIdx < self.currentBadges.count {
+                item.badgeValue = self.currentBadges[badgeIdx]
+              }
+              items.append(item)
             }
             return items
           }
@@ -196,6 +224,34 @@ channel.setMethodCallHandler { [weak self] call, result in
             result(FlutterError(code: "state_error", message: "Tab bars not initialized", details: nil))
           }
         } else { result(FlutterError(code: "bad_args", message: "Missing items", details: nil)) }
+      case "setBadges":
+        if let args = call.arguments as? [String: Any], let b = args["badges"] as? [Any] {
+          self.currentBadges = b.map { v in
+            if v is NSNull { return nil }
+            return (v as? String)
+          }
+          func applyBadgesToBar(_ bar: UITabBar, offset: Int) {
+            guard let items = bar.items else { return }
+            for (idx, item) in items.enumerated() {
+              let globalIdx = offset + idx
+              if globalIdx < self.currentBadges.count {
+                item.badgeValue = self.currentBadges[globalIdx]
+              } else {
+                item.badgeValue = nil
+              }
+            }
+          }
+          if let bar = self.tabBar {
+            applyBadgesToBar(bar, offset: 0)
+          } else if let left = self.tabBarLeft, let right = self.tabBarRight {
+            let leftCount = left.items?.count ?? 0
+            applyBadgesToBar(left, offset: 0)
+            applyBadgesToBar(right, offset: leftCount)
+          }
+          result(nil)
+        } else {
+          result(FlutterError(code: "bad_args", message: "Missing badges", details: nil))
+        }
       case "setLayout":
         if let args = call.arguments as? [String: Any] {
           let split = (args["split"] as? NSNumber)?.boolValue ?? false
@@ -221,7 +277,12 @@ channel.setMethodCallHandler { [weak self] call, result in
               var image: UIImage? = nil
               if i < symbols.count { image = UIImage(systemName: symbols[i]) }
               let title = (i < labels.count) ? labels[i] : nil
-              items.append(UITabBarItem(title: title, image: image, selectedImage: image))
+              let item = UITabBarItem(title: title, image: image, selectedImage: image)
+              let badgeIdx = i
+              if badgeIdx < self.currentBadges.count {
+                item.badgeValue = self.currentBadges[badgeIdx]
+              }
+              items.append(item)
             }
             return items
           }

@@ -9,6 +9,7 @@ class CupertinoTabBarNSView: NSView {
   private var currentSizes: [NSNumber] = []
   private var currentTint: NSColor? = nil
   private var currentBackground: NSColor? = nil
+  private var currentBadges: [String?] = []
 
   init(viewId: Int64, args: Any?, messenger: FlutterBinaryMessenger) {
     self.channel = FlutterMethodChannel(name: "CupertinoNativeTabBar_\(viewId)", binaryMessenger: messenger)
@@ -32,6 +33,12 @@ class CupertinoTabBarNSView: NSView {
         if let n = style["tint"] as? NSNumber { tint = Self.colorFromARGB(n.intValue) }
         if let n = style["backgroundColor"] as? NSNumber { bg = Self.colorFromARGB(n.intValue) }
       }
+      if let b = dict["badges"] as? [Any] {
+        currentBadges = b.map { v in
+          if v is NSNull { return nil }
+          return (v as? String)
+        }
+      }
     }
 
     super.init(frame: .zero)
@@ -50,6 +57,7 @@ class CupertinoTabBarNSView: NSView {
     self.currentBackground = bg
     if let b = bg { wantsLayer = true; layer?.backgroundColor = b.cgColor }
     applySegmentTint()
+    applyBadges()
 
     control.target = self
     control.action = #selector(onChanged(_:))
@@ -87,6 +95,32 @@ class CupertinoTabBarNSView: NSView {
           self.applySegmentTint()
           result(nil)
         } else { result(FlutterError(code: "bad_args", message: "Missing style", details: nil)) }
+      case "setItems":
+        if let args = call.arguments as? [String: Any] {
+          let labels = (args["labels"] as? [String]) ?? []
+          let symbols = (args["sfSymbols"] as? [String]) ?? []
+          self.currentLabels = labels
+          self.currentSymbols = symbols
+          if let b = args["badges"] as? [Any] {
+            self.currentBadges = b.map { v in
+              if v is NSNull { return nil }
+              return (v as? String)
+            }
+          }
+          self.configureSegments(labels: labels, symbols: symbols, sizes: self.currentSizes)
+          self.applySegmentTint()
+          self.applyBadges()
+          result(nil)
+        } else { result(FlutterError(code: "bad_args", message: "Missing items", details: nil)) }
+      case "setBadges":
+        if let args = call.arguments as? [String: Any], let b = args["badges"] as? [Any] {
+          self.currentBadges = b.map { v in
+            if v is NSNull { return nil }
+            return (v as? String)
+          }
+          self.applyBadges()
+          result(nil)
+        } else { result(FlutterError(code: "bad_args", message: "Missing badges", details: nil)) }
       case "setBrightness":
         if let args = call.arguments as? [String: Any], let isDark = (args["isDark"] as? NSNumber)?.boolValue {
           self.appearance = NSAppearance(named: isDark ? .darkAqua : .aqua)
@@ -141,6 +175,30 @@ class CupertinoTabBarNSView: NSView {
           }
         }
         control.setImage(image, forSegment: i)
+      }
+    }
+  }
+
+  private func applyBadges() {
+    let count = max(currentLabels.count, currentSymbols.count)
+    guard count > 0 else { return }
+    // Ensure array sized
+    if currentBadges.count < count {
+      currentBadges += Array(repeating: nil, count: count - currentBadges.count)
+    }
+    for i in 0..<count {
+      let base = (i < currentLabels.count ? currentLabels[i] : "")
+      let badge = (i < currentBadges.count ? currentBadges[i] : nil)
+      if let b = badge, !b.isEmpty {
+        let composed = base.isEmpty ? b : "\(base) (\(b))"
+        control.setLabel(composed, forSegment: i)
+      } else {
+        // Restore base label if any; leave image intact
+        if !base.isEmpty {
+          control.setLabel(base, forSegment: i)
+        } else {
+          control.setLabel("", forSegment: i)
+        }
       }
     }
   }
